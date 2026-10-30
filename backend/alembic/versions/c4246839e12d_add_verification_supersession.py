@@ -4,13 +4,15 @@ Revision ID: c4246839e12d
 Revises: a4f5b6c7d8e9
 Create Date: 2026-10-24 21:56:32.976536
 """
+
 from typing import Sequence, Union
-from alembic import op
+
 import sqlalchemy as sa
 
+from alembic import op
 
-revision: str = 'c4246839e12d'
-down_revision: Union[str, None] = 'a4f5b6c7d8e9'
+revision: str = "c4246839e12d"
+down_revision: Union[str, None] = "a4f5b6c7d8e9"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

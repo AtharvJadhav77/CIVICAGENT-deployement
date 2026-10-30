@@ -194,9 +194,7 @@ def _build_legacy_inputs(
             cat = str(f.category).upper()
             counts[cat] = counts.get(cat, 0) + 1
 
-    nearby = (
-        historical.same_category_nearby_7d if historical is not None else 0
-    )
+    nearby = historical.same_category_nearby_7d if historical is not None else 0
     nearby_30d = historical.same_category_nearby_30d if historical is not None else 0
     return PrioritySignalInputs(
         severity=bundle.severity.severity or "LOW",
@@ -265,26 +263,18 @@ async def _compute_node(state: PriorityState) -> dict[str, object]:
         threshold_p1=float(settings.PRIORITY_THRESHOLD_P1),
         threshold_p2=float(settings.PRIORITY_THRESHOLD_P2),
         threshold_p3=float(settings.PRIORITY_THRESHOLD_P3),
-        infra_decay_bands=tuple(
-            float(v) for v in settings.PRIORITY_INFRA_DECAY_BANDS_M
-        ),
-        infra_band_factors=tuple(
-            float(v) for v in settings.PRIORITY_INFRA_DISTANCE_FACTORS
-        ),
+        infra_decay_bands=tuple(float(v) for v in settings.PRIORITY_INFRA_DECAY_BANDS_M),
+        infra_band_factors=tuple(float(v) for v in settings.PRIORITY_INFRA_DISTANCE_FACTORS),
         infra_saturation=float(settings.PRIORITY_INFRA_SATURATION),
         infra_peak_weight=float(settings.PRIORITY_INFRA_PEAK_WEIGHT),
         infra_cluster_weight=float(settings.PRIORITY_INFRA_CLUSTER_WEIGHT),
         infra_access_bonus_50m=float(settings.PRIORITY_INFRA_ACCESS_BONUS_50_M),
         infra_access_bonus_100m=float(settings.PRIORITY_INFRA_ACCESS_BONUS_100_M),
-        weather_probability_threshold_pct=float(
-            settings.PRIORITY_WEATHER_PROBABILITY_PCT
-        ),
+        weather_probability_threshold_pct=float(settings.PRIORITY_WEATHER_PROBABILITY_PCT),
         facility_base_relevance=settings.PRIORITY_FACILITY_BASE_RELEVANCE,
         category_facility_factors=settings.PRIORITY_CATEGORY_FACILITY_FACTORS,
         population_subweights=settings.PRIORITY_POPULATION_SUBWEIGHTS,
-        emergency_access_band_m=float(
-            settings.PRIORITY_AMPLIFIER_EMERGENCY_ACCESS_BAND_M
-        ),
+        emergency_access_band_m=float(settings.PRIORITY_AMPLIFIER_EMERGENCY_ACCESS_BAND_M),
         amplifier_points=_amplifier_points(settings),
         hotspot_repeat_count=int(settings.PRIORITY_HOTSPOT_REPEAT_COUNT),
     )
@@ -419,12 +409,8 @@ async def _persist_node(state: PriorityState) -> dict[str, object]:
                 data_status=output.data_status.value,
                 components=[c.model_dump(mode="json") for c in output.components],
                 sources=[s.model_dump(mode="json") for s in output.sources],
-                risk_amplifiers=[
-                    r.model_dump(mode="json") for r in output.risk_amplifiers
-                ],
-                sla=(
-                    output.sla.model_dump(mode="json") if output.sla is not None else None
-                ),
+                risk_amplifiers=[r.model_dump(mode="json") for r in output.risk_amplifiers],
+                sla=(output.sla.model_dump(mode="json") if output.sla is not None else None),
                 reason=output.reason,
                 summary=output.summary,
             )

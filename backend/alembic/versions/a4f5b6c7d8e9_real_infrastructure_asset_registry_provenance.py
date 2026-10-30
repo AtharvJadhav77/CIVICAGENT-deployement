@@ -47,9 +47,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_index(
-        "uix_infrastructure_assets_source_source_id", table_name="infrastructure_assets"
-    )
+    op.drop_index("uix_infrastructure_assets_source_source_id", table_name="infrastructure_assets")
     op.drop_index("ix_infrastructure_assets_source_id", table_name="infrastructure_assets")
     op.drop_index("ix_infrastructure_assets_source", table_name="infrastructure_assets")
     op.execute("ALTER TABLE infrastructure_assets DROP COLUMN IF EXISTS source_id")

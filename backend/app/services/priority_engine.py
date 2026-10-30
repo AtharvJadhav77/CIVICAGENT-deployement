@@ -498,10 +498,10 @@ _POPULATION_SUBWEIGHTS: dict[str, float] = {
 # with verified critical context can genuinely reach 25 and a bare MEDIUM cannot
 # leave the low range. (Sub-scores are scaled proportionally if the severity
 # weight is reconfigured.)
-_SEVERITY_BASE_FRACTION: float = 0.40        #   10 / 25
-_SEVERITY_SAFETY_FRACTION: float = 0.20      #    5 / 25
+_SEVERITY_BASE_FRACTION: float = 0.40  #   10 / 25
+_SEVERITY_SAFETY_FRACTION: float = 0.20  #    5 / 25
 _SEVERITY_ACCESSIBILITY_FRACTION: float = 0.12  #  3 / 25
-_SEVERITY_CRITICAL_INFRA_FRACTION: float = 0.16 # 4 / 25
+_SEVERITY_CRITICAL_INFRA_FRACTION: float = 0.16  # 4 / 25
 _SEVERITY_ENVIRONMENTAL_FRACTION: float = 0.12  # 3 / 25
 _SEVERITY_SUB_FRACTIONS: dict[str, float] = {
     "base": _SEVERITY_BASE_FRACTION,
@@ -819,9 +819,7 @@ def _weather_precip_signals(weather: WeatherInput | None) -> float:
         return 0.0
     rain = weather.rain_mm if weather.rain_mm is not None else weather.precipitation_mm
     values = [
-        v
-        for v in (rain, weather.recent_precip_mm, weather.forecast_precip_mm)
-        if v is not None
+        v for v in (rain, weather.recent_precip_mm, weather.forecast_precip_mm) if v is not None
     ]
     signal = max((_rain_signal_mm(v) for v in values), default=0.0)
     if (
@@ -868,8 +866,7 @@ def safety_unit(
             emergency = [
                 f
                 for f in facilities
-                if str(f.category).upper() in _EMERGENCY_CATEGORIES
-                and f.distance_m is not None
+                if str(f.category).upper() in _EMERGENCY_CATEGORIES and f.distance_m is not None
             ]
             for band, tier_unit in _SAFETY_EMERGENCY_TIERS:
                 if any(f.distance_m is not None and f.distance_m <= band for f in emergency):
@@ -895,13 +892,9 @@ def safety_unit(
             unit = max(unit, _clamp(0.4 + 0.6 * rain_signal))
 
     if population is not None and population.status == "AVAILABLE":
-        n500 = int(population.reports_7d.get(500, 0)) + int(
-            population.reports_7d.get(250, 0)
-        )
+        n500 = int(population.reports_7d.get(500, 0)) + int(population.reports_7d.get(250, 0))
         unique = int(population.unique_reporters_7d)
-        corroboration = _clamp(
-            0.05 * min(1.0, n500 / 6.0) + 0.05 * min(1.0, unique / 4.0)
-        )
+        corroboration = _clamp(0.05 * min(1.0, n500 / 6.0) + 0.05 * min(1.0, unique / 4.0))
         unit = _clamp(unit + corroboration)
     return _clamp(unit)
 
@@ -932,8 +925,7 @@ def accessibility_unit(
     exposed = [
         f
         for f in facilities
-        if str(f.category).upper()
-        in (_EMERGENCY_CATEGORIES | _PUBLIC_SAFETY_FACILITY_CATEGORIES)
+        if str(f.category).upper() in (_EMERGENCY_CATEGORIES | _PUBLIC_SAFETY_FACILITY_CATEGORIES)
         and f.distance_m is not None
     ]
     if not exposed:
@@ -979,8 +971,7 @@ def critical_infra_unit(
     critical = [
         f
         for f in facilities
-        if str(f.category).upper() in _EMERGENCY_CATEGORIES
-        and f.distance_m is not None
+        if str(f.category).upper() in _EMERGENCY_CATEGORIES and f.distance_m is not None
     ]
     explicit = detect_explicit_facility(description)
     matched = best_facility_match(explicit, facilities) if explicit is not None else None
@@ -1178,9 +1169,7 @@ def facility_relevance(
         relevance where the facility genuinely matters, never the reverse.
     """
     weights = base_relevance if base_relevance is not None else _FACILITY_BASE_RELEVANCE
-    factors = (
-        category_factors if category_factors is not None else _CATEGORY_FACILITY_FACTORS
-    )
+    factors = category_factors if category_factors is not None else _CATEGORY_FACILITY_FACTORS
     ftype = str(facility.category).upper()
     base = weights.get(ftype, weights.get(facility.category, 0.10))
     factor = (factors.get((category or "").upper()) or {}).get(ftype, 1.0)
@@ -1261,16 +1250,12 @@ def infrastructure_unit(
         )
         for f in (facilities or ())
     ]
-    if not contributions or any(
-        not math.isfinite(float(c)) for c in contributions
-    ):
+    if not contributions or any(not math.isfinite(float(c)) for c in contributions):
         return 0.0
     peak = max(0.0, max(contributions))
     total = sum(contributions)
     cluster_unit = (
-        1.0 - math.exp(-total / float(saturation))
-        if total > 0 and saturation > 0
-        else 0.0
+        1.0 - math.exp(-total / float(saturation)) if total > 0 and saturation > 0 else 0.0
     )
     bonus = _infra_access_bonus(
         facilities or (), category, bonus_50m=access_bonus_50m, bonus_100m=access_bonus_100m
@@ -1324,9 +1309,7 @@ def population_subunits(
 
     out: list[tuple[str, float | None, float]] = []
     if c.population is not None and c.population > 0 and c.population_status == "AVAILABLE":
-        out.append(
-            ("population_exposure", _clamp(min(1.0, c.population / 150_000.0)), w_pop)
-        )
+        out.append(("population_exposure", _clamp(min(1.0, c.population / 150_000.0)), w_pop))
     else:
         out.append(("population_exposure", None, w_pop))
 
@@ -1535,11 +1518,7 @@ def evidence_unit(e: EvidenceInput) -> float:
     structured = 1.0 if e.category_structured else 0.0
     corroborating = _clamp(e.corroborating_reports_30d / 6.0)
     base_unit = (
-        0.30 * gps
-        + 0.20 * description
-        + 0.20 * media
-        + 0.15 * structured
-        + 0.15 * corroborating
+        0.30 * gps + 0.20 * description + 0.20 * media + 0.15 * structured + 0.15 * corroborating
     )
     if ai_unit is None:
         return _clamp(min(base_unit, _NON_AI_EVIDENCE_CAP))
@@ -1562,17 +1541,16 @@ def _access_impact_detail(
     emergency = [
         f
         for f in (facilities or ())
-        if str(f.category).upper() in _EMERGENCY_CATEGORIES
-        and f.distance_m is not None
+        if str(f.category).upper() in _EMERGENCY_CATEGORIES and f.distance_m is not None
     ]
     near = [f for f in emergency if f.distance_m is not None and f.distance_m <= emergency_band_m]
     unclear = [f for f in (facilities or ()) if f.distance_m is None]
     return {
         "category": cat,
         "category_type": (
-            "access-affecting" if cat in _ACCESS_AFFECTING_CATEGORIES else (
-                "public-affecting" if cat in _PUBLIC_AFFECTING_CATEGORIES else "other"
-            )
+            "access-affecting"
+            if cat in _ACCESS_AFFECTING_CATEGORIES
+            else ("public-affecting" if cat in _PUBLIC_AFFECTING_CATEGORIES else "other")
         ),
         "emergency_access_impacted": (
             cat in _ACCESS_AFFECTING_CATEGORIES
@@ -1583,11 +1561,9 @@ def _access_impact_detail(
                 "name": f.name,
                 "category": f.category,
                 "distance_m": f.distance_m,
-                "decay": round(
-                    distance_band_factor(f.distance_m, bands, band_factors), 3
-                ),
+                "decay": round(distance_band_factor(f.distance_m, bands, band_factors), 3),
             }
-            for f in sorted(near, key=lambda x: (x.distance_m or float("inf")))
+            for f in sorted(near, key=lambda x: x.distance_m or float("inf"))
         ][:5],
         "unresolved_facility_distances": len(unclear),
     }
@@ -1623,9 +1599,7 @@ def evaluate_risk_amplifiers(
     genuine same-category recurrence evidence.
     """
     points = {
-        "FLOODING_RISK": amplifier_points.get("FLOODING_RISK", 6.0)
-        if amplifier_points
-        else 6.0,
+        "FLOODING_RISK": amplifier_points.get("FLOODING_RISK", 6.0) if amplifier_points else 6.0,
         "EMERGENCY_ACCESS_RISK": amplifier_points.get("EMERGENCY_ACCESS_RISK", 5.0)
         if amplifier_points
         else 5.0,
@@ -1642,8 +1616,10 @@ def evaluate_risk_amplifiers(
     facilities = list((infrastructure.facilities or ()) if infrastructure is not None else ())
     weather_available = weather is not None and weather.status == "AVAILABLE"
     current_rain = (
-        weather.rain_mm if weather.rain_mm is not None else weather.precipitation_mm
-    ) if weather is not None else None
+        (weather.rain_mm if weather.rain_mm is not None else weather.precipitation_mm)
+        if weather is not None
+        else None
+    )
     forecast_rain = weather.forecast_precip_mm if weather is not None else None
     threshold = weather.threshold_mm if weather is not None else 5.0
     same_cat_30d = historical.same_category_nearby_30d if historical is not None else 0
@@ -1703,7 +1679,8 @@ def evaluate_risk_amplifiers(
     emergency_triggers: list[str] = []
     emergency_evidence: list[str] = []
     emergency_facilities = [
-        f for f in facilities
+        f
+        for f in facilities
         if str(f.category).upper() in _EMERGENCY_CATEGORIES
         and f.distance_m is not None
         and f.distance_m <= emergency_access_band_m
@@ -1711,9 +1688,7 @@ def evaluate_risk_amplifiers(
     if cat in _ACCESS_AFFECTING_CATEGORIES and emergency_facilities:
         distance_emergency = [
             f"{f.name} ({f.category}, {f.distance_m:.0f} m)"
-            for f in sorted(
-                emergency_facilities, key=lambda f: (f.distance_m or float("inf"))
-            )
+            for f in sorted(emergency_facilities, key=lambda f: f.distance_m or float("inf"))
         ]
         emergency_triggers.append(
             "Access-affecting hazard close to an emergency facility "
@@ -1761,9 +1736,7 @@ def evaluate_risk_amplifiers(
     unresolved = historical.unresolved_similar_nearby if historical is not None else 0
     if same_cat_30d >= max(1, int(hotspot_repeat_count)) and unresolved >= 1:
         hotspot_triggers.append("Repeated same-category incidents in the area")
-        hotspot_evidence.append(
-            f"{same_cat_30d} similar in 30 d, {unresolved} still unresolved"
-        )
+        hotspot_evidence.append(f"{same_cat_30d} similar in 30 d, {unresolved} still unresolved")
     else:
         hotspot_triggers = ["No recurring same-category hotspot in the area"]
     _emitter(
@@ -1872,18 +1845,18 @@ def score_priority(
     threshold_p3: float = 40.0,
     infra_decay_bands: tuple[float, ...] = (50.0, 100.0, 250.0, 500.0),
     infra_band_factors: tuple[float, ...] = (1.0, 0.9, 0.6, 0.35),
-infra_saturation: float = 2.2,
+    infra_saturation: float = 2.2,
     infra_peak_weight: float = _INFRA_PEAK_WEIGHT,
     infra_cluster_weight: float = _INFRA_CLUSTER_WEIGHT,
     infra_access_bonus_50m: float = _INFRA_ACCESS_BONUS_50M,
     infra_access_bonus_100m: float = _INFRA_ACCESS_BONUS_100M,
     weather_probability_threshold_pct: float = 60.0,
     facility_base_relevance: dict[str, float] | None = None,
-        category_facility_factors: dict[str, dict[str, float]] | None = None,
-        population_subweights: dict[str, float] | None = None,
-        emergency_access_band_m: float = 250.0,
-        amplifier_points: dict[str, float] | None = None,
-        hotspot_repeat_count: int = 5,
+    category_facility_factors: dict[str, dict[str, float]] | None = None,
+    population_subweights: dict[str, float] | None = None,
+    emergency_access_band_m: float = 250.0,
+    amplifier_points: dict[str, float] | None = None,
+    hotspot_repeat_count: int = 5,
 ) -> tuple[int, DynamicPriority, list[dict[str, Any]], PriorityReadiness, list[dict[str, Any]]]:
     """Score a complaint against the six real-data components (pure).
 
@@ -1948,13 +1921,8 @@ infra_saturation: float = 2.2,
         bands=infra_decay_bands,
         band_factors=infra_band_factors,
     )
-    sub_maxima = {
-        sub: round(w.severity * frac)
-        for sub, frac in _SEVERITY_SUB_FRACTIONS.items()
-    }
-    sub_scores = {
-        sub: int(round(dims[sub] * sub_maxima[sub])) for sub in dims
-    }
+    sub_maxima = {sub: round(w.severity * frac) for sub, frac in _SEVERITY_SUB_FRACTIONS.items()}
+    sub_scores = {sub: int(round(dims[sub] * sub_maxima[sub])) for sub in dims}
     severity_unit_value = sum(sub_scores.values()) / w.severity
     components.append(
         _emit(
@@ -2065,9 +2033,7 @@ infra_saturation: float = 2.2,
         )
         labels = {
             "FOUND": "Verified nearby facilities found",
-            "NO_VERIFIED_RECORDS": (
-                "Search resolved: verified zero nearby facilities"
-            ),
+            "NO_VERIFIED_RECORDS": ("Search resolved: verified zero nearby facilities"),
             "DATA_UNAVAILABLE": (
                 "Nearby-infrastructure lookup could not be performed; nothing claimed"
             ),
@@ -2075,12 +2041,11 @@ infra_saturation: float = 2.2,
         }
         summary_parts = []
         if explicit_facility is not None:
-            summary_parts.append(
-                f"explicit mention: {explicit_facility.lower()}"
-            )
-        summary = ", ".join(
-            f"{f.category.lower()}: {f.distance_m:.0f} m" for f in infra_facilities[:5]
-        ) or "none in range"
+            summary_parts.append(f"explicit mention: {explicit_facility.lower()}")
+        summary = (
+            ", ".join(f"{f.category.lower()}: {f.distance_m:.0f} m" for f in infra_facilities[:5])
+            or "none in range"
+        )
         if summary_parts:
             summary = f"{summary_parts[0]}; {summary}"
         comp = _emit(
@@ -2166,11 +2131,7 @@ infra_saturation: float = 2.2,
         sub_records: dict[str, Any] = {}
         for key, sub_unit, weight in subs:
             sub_records[key] = {
-                "score": (
-                    int(round(sub_unit * w.population))
-                    if sub_unit is not None
-                    else None
-                ),
+                "score": (int(round(sub_unit * w.population)) if sub_unit is not None else None),
                 "status": "AVAILABLE" if sub_unit is not None else "DATA_UNAVAILABLE",
                 "weight": round(weight, 2),
             }
@@ -2239,13 +2200,9 @@ infra_saturation: float = 2.2,
         if not state_available:
             unit = 0.0
         rain_value = (
-            weather.rain_mm
-            if weather.rain_mm is not None
-            else weather.precipitation_mm or 0.0
+            weather.rain_mm if weather.rain_mm is not None else weather.precipitation_mm or 0.0
         )
-        band_label = weather_band_label(
-            int(round(unit * w.weather)) if state_available else None
-        )
+        band_label = weather_band_label(int(round(unit * w.weather)) if state_available else None)
         # A raw unit < 0.05 can still round to a 10-scale 0 (correct); banded
         # units are derived from the raw unit, not this rounded /10 value.
         components.append(
@@ -2272,9 +2229,7 @@ infra_saturation: float = 2.2,
                 details={
                     "condition": weather.condition,
                     "rain_mm_now": (  # noqa: E501
-                        weather.rain_mm
-                        if weather.rain_mm is not None
-                        else weather.precipitation_mm
+                        weather.rain_mm if weather.rain_mm is not None else weather.precipitation_mm
                     ),
                     "forecast_precip_max_mm": weather.forecast_precip_mm,
                     "recent_precip_max_mm": weather.recent_precip_mm,
@@ -2329,9 +2284,7 @@ infra_saturation: float = 2.2,
         ai_conf, ai_source = ai_evidence_confidence(evidence)
         ai_pct = int(round((ai_conf or 0.0) * 100.0))
         ai_label = (
-            f"AI verified {ai_pct}% ({ai_source})"
-            if ai_conf is not None
-            else "AI not available"
+            f"AI verified {ai_pct}% ({ai_source})" if ai_conf is not None else "AI not available"
         )
         components.append(
             _emit(

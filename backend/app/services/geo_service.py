@@ -536,9 +536,7 @@ class GeoService:
             results: dict[int, dict[str, Any] | None] = {}
             try:
                 while pending:
-                    done, pending = await asyncio.wait(
-                        pending, return_when=asyncio.FIRST_COMPLETED
-                    )
+                    done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
                     for task in done:
                         rank = tasks[task]
                         try:
@@ -566,9 +564,7 @@ class GeoService:
         places.sort(key=lambda p: p.distance_m or math.inf)
         # Cache genuine live successes only (an empty result is real
         # "no facilities", a failure is never cached).
-        await self._store_infra_cache(
-            cache_key, [p.model_dump(mode="json") for p in places]
-        )
+        await self._store_infra_cache(cache_key, [p.model_dump(mode="json") for p in places])
         return places, True, f"overpass:{_host(endpoint)}", False
 
     @classmethod
@@ -793,7 +789,9 @@ class GeoService:
         by_category: dict[CriticalLocationCategory, list[GeoPlace]] = {}
         statuses: dict[CriticalLocationCategory, InfrastructureDataStatus] = {}
 
-        async def resolve(category: CriticalLocationCategory) -> tuple[
+        async def resolve(
+            category: CriticalLocationCategory,
+        ) -> tuple[
             CriticalLocationCategory,
             InfrastructureDataStatus,
             list[GeoPlace],

@@ -3,12 +3,13 @@
 Revision ID: d5e6f7a8b9c0
 Revises: c4246839e12d
 """
-from collections.abc import Sequence
-import uuid
 
-from alembic import op
+import uuid
+from collections.abc import Sequence
+
 import sqlalchemy as sa
 
+from alembic import op
 
 revision: str = "d5e6f7a8b9c0"
 down_revision: str = "c4246839e12d"

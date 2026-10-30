@@ -511,12 +511,11 @@ async def test_deterministic_priority_engine_freezes_score_for_identical_inputs(
     assert b1 == b2
     assert r1 == r2
     assert 0 <= s1 <= 100
+
     # Component CONTENT is byte-for-byte identical for identical inputs; only
     # the retrieval timestamps (calculated_at) legitimately differ per call.
     def _without_stamps(components):
-        return [
-            {k: v for k, v in c.items() if k != "calculated_at"} for c in components
-        ]
+        return [{k: v for k, v in c.items() if k != "calculated_at"} for c in components]
 
     assert _without_stamps(f1) == _without_stamps(f2)
     assert sum(1 for c in f1 if c["score"] is not None) >= 1

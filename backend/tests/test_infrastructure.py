@@ -457,9 +457,7 @@ async def test_review_and_preventive_work_order_flow(client: TestClient):
     )
 
     data = (await client.get(f"{_BASE}/predictions", headers=headers)).json()
-    prediction_id = next(
-        a["id"] for a in data["assets"] if a["asset"]["name"] == "Reviewed Main"
-    )
+    prediction_id = next(a["id"] for a in data["assets"] if a["asset"]["name"] == "Reviewed Main")
 
     r = await client.post(
         f"{_BASE}/predictions/{prediction_id}/review",
@@ -523,9 +521,7 @@ async def _ward_point(ward_id: uuid.UUID) -> tuple[float, float]:
 async def _ward_with_boundary() -> uuid.UUID:
     """A ward that actually owns a boundary polygon (suite-order independent)."""
     async with async_session_factory() as db:
-        row = (
-            await db.execute(text("SELECT ward_id FROM ward_boundaries LIMIT 1"))
-        ).first()
+        row = (await db.execute(text("SELECT ward_id FROM ward_boundaries LIMIT 1"))).first()
     assert row is not None, "no ward boundaries seeded"
     return row.ward_id
 

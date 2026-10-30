@@ -28,22 +28,13 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    op.execute(
-        "ALTER TABLE complaint_priority_history ADD COLUMN data_status VARCHAR(32)"
-    )
-    op.execute(
-        "ALTER TABLE complaint_priority_history ADD COLUMN components JSONB"
-    )
-    op.execute(
-        "ALTER TABLE complaint_priority_history ADD COLUMN sources JSONB"
-    )
-    op.execute(
-        "ALTER TABLE complaint_priority_history ADD COLUMN reason VARCHAR(255)"
-    )
+    op.execute("ALTER TABLE complaint_priority_history ADD COLUMN data_status VARCHAR(32)")
+    op.execute("ALTER TABLE complaint_priority_history ADD COLUMN components JSONB")
+    op.execute("ALTER TABLE complaint_priority_history ADD COLUMN sources JSONB")
+    op.execute("ALTER TABLE complaint_priority_history ADD COLUMN reason VARCHAR(255)")
     # Historical rows predate the readable statuses; treat them as honest unknowns.
     op.execute(
-        "UPDATE complaint_priority_history SET data_status = 'PARTIAL'"
-        " WHERE data_status IS NULL"
+        "UPDATE complaint_priority_history SET data_status = 'PARTIAL' WHERE data_status IS NULL"
     )
 
 

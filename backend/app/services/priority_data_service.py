@@ -98,9 +98,7 @@ class PriorityDataService:
 
         excluded_ids = await self._confirmed_duplicate_ids(db, complaint.id)
 
-        infrastructure = await self._collect_infrastructure(
-            db, settings, latitude, longitude, now
-        )
+        infrastructure = await self._collect_infrastructure(db, settings, latitude, longitude, now)
         weather = await self._collect_weather(settings, latitude, longitude, now)
         historical = await self._collect_historical(
             db,
@@ -156,29 +154,21 @@ class PriorityDataService:
             ComplaintCorrelation.target_complaint_id,
         )
         rows = (
-            (
-                await db.execute(
-                    select(*cols)
-                    .where(
-                        ComplaintCorrelation.status == CorrelationMatchStatus.CONFIRMED,
-                        ComplaintCorrelation.source_complaint_id == complaint_id,
-                    )
+            await db.execute(
+                select(*cols).where(
+                    ComplaintCorrelation.status == CorrelationMatchStatus.CONFIRMED,
+                    ComplaintCorrelation.source_complaint_id == complaint_id,
                 )
             )
-            .all()
-        )
+        ).all()
         rows2 = (
-            (
-                await db.execute(
-                    select(*cols)
-                    .where(
-                        ComplaintCorrelation.status == CorrelationMatchStatus.CONFIRMED,
-                        ComplaintCorrelation.target_complaint_id == complaint_id,
-                    )
+            await db.execute(
+                select(*cols).where(
+                    ComplaintCorrelation.status == CorrelationMatchStatus.CONFIRMED,
+                    ComplaintCorrelation.target_complaint_id == complaint_id,
                 )
             )
-            .all()
-        )
+        ).all()
         excluded: set[uuid.UUID] = set()
         for src, tgt in [*rows, *rows2]:
             excluded.add(tgt if src == complaint_id else src)
@@ -220,8 +210,10 @@ class PriorityDataService:
         facilities: list[FacilityInput] = []
         statuses: set[str] = set()
         for summary in out.categories:
-            cat_value = summary.category.value if hasattr(summary.category, "value") else str(
-                summary.category
+            cat_value = (
+                summary.category.value
+                if hasattr(summary.category, "value")
+                else str(summary.category)
             )
             statuses.add(summary.status.value)
             for place in summary.places:
@@ -234,7 +226,7 @@ class PriorityDataService:
                         record_id=place.id,
                     )
                 )
-        facilities.sort(key=lambda f: (f.distance_m if f.distance_m is not None else float("inf")))
+        facilities.sort(key=lambda f: f.distance_m if f.distance_m is not None else float("inf"))
 
         found = "FOUND" in statuses
         pending = "PENDING_VERIFICATION" in statuses
@@ -306,9 +298,7 @@ class PriorityDataService:
             threshold_mm=float(settings.PRIORITY_WEATHER_RAIN_MM),
             status="AVAILABLE",
             calculated_at=now,
-            explanation=(
-                "Real Open-Meteo current + recent + next-days forecast conditions."
-            ),
+            explanation=("Real Open-Meteo current + recent + next-days forecast conditions."),
         )
 
     async def _collect_historical(
@@ -376,9 +366,7 @@ class PriorityDataService:
             )
 
         return HistoricalInput(
-            same_category_nearby_7d=await _nearby_count(
-                window_7d, radius, same_category_only=True
-            ),
+            same_category_nearby_7d=await _nearby_count(window_7d, radius, same_category_only=True),
             same_category_nearby_30d=await _nearby_count(
                 window_30d, radius, same_category_only=True
             ),
@@ -409,9 +397,7 @@ class PriorityDataService:
     ) -> PopulationInput:
         window_7d = now - timedelta(hours=float(settings.PRIORITY_REPORT_WINDOW_HOURS))
         window_30d = now - timedelta(hours=float(settings.PRIORITY_HISTORICAL_WINDOW_30D_HOURS))
-        radii = tuple(
-            float(r) for r in settings.PRIORITY_DENSITY_RADII_M or _DENSITY_RADII
-        )
+        radii = tuple(float(r) for r in settings.PRIORITY_DENSITY_RADII_M or _DENSITY_RADII)
 
         proximity_known = latitude is not None and longitude is not None
         if not proximity_known:
@@ -463,13 +449,17 @@ class PriorityDataService:
         unresolved_30d = await _count(1000.0, window_30d, unresolved_only=True)
 
         spread = await db.scalar(
-            select(func.max(func.st_distance(ComplaintLocation.geom.cast(gh), point.cast(gh)))).where(  # noqa: E501
+            select(
+                func.max(func.st_distance(ComplaintLocation.geom.cast(gh), point.cast(gh)))
+            ).where(  # noqa: E501
                 ComplaintLocation.complaint_id != complaint_id,
                 ComplaintLocation.complaint_id.in_(
-                    select(Complaint.id).join(
+                    select(Complaint.id)
+                    .join(
                         ComplaintLocation,
                         ComplaintLocation.complaint_id == Complaint.id,
-                    ).where(
+                    )
+                    .where(
                         Complaint.id != complaint_id,
                         Complaint.created_at >= window_30d,
                         ST_DWithin(ComplaintLocation.geom.cast(gh), point.cast(gh), 1000.0),
@@ -501,9 +491,7 @@ class PriorityDataService:
             sensitive_facilities_nearby=sensitive,
             sensitive_facilities=sensitive_facilities,
             population=None,
-            population_status=(
-                "AVAILABLE" if population_available else "DATA_UNAVAILABLE"
-            ),
+            population_status=("AVAILABLE" if population_available else "DATA_UNAVAILABLE"),
             status="AVAILABLE",
             calculated_at=now,
         )

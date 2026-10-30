@@ -222,9 +222,7 @@ def _extreme_bundle():
         severity=SeverityInput(severity="CRITICAL"),
         infrastructure=InfrastructureInput(
             facilities=[
-                FacilityInput(
-                    name=f"Hospital-{i}", category="HOSPITAL", distance_m=50.0
-                )
+                FacilityInput(name=f"Hospital-{i}", category="HOSPITAL", distance_m=50.0)
                 for i in range(6)
             ],
             status="FOUND",
@@ -274,9 +272,7 @@ def _extreme_bundle():
 
 
 def test_extreme_values_clamp_to_100():
-    score, bucket, components, readiness, amplifiers = score_priority(
-        **_extreme_bundle()
-    )
+    score, bucket, components, readiness, amplifiers = score_priority(**_extreme_bundle())
     assert 0 <= score <= 100
     assert score == 100  # clamped despite amplifier bonus exceeding 100
     assert bucket == DynamicPriority.P1_CRITICAL
@@ -418,9 +414,7 @@ def test_readiness_detection_all_present_is_ready():
 # Pure engine: component differentiation (deterministic)
 # --------------------------------------------------------------------------- #
 def test_weather_category_multiplier_differentiates():
-    rainy = WeatherInput(
-        condition="Heavy rain", rain_mm=50.0, threshold_mm=5.0, status="AVAILABLE"
-    )
+    rainy = WeatherInput(condition="Heavy rain", rain_mm=50.0, threshold_mm=5.0, status="AVAILABLE")
     score_flood, _b, comps_flood, _r, _a = score_priority(
         category="FLOODING", severity=SeverityInput(severity="LOW"), weather=rainy
     )
@@ -499,9 +493,7 @@ def test_score_never_renormalized_when_a_component_is_missing():
     s_with, _b, comps_with, _r, _a = score_priority(
         **common,
         infrastructure=InfrastructureInput(
-            facilities=[
-                FacilityInput(name="Hospital", category="HOSPITAL", distance_m=50.0)
-            ],
+            facilities=[FacilityInput(name="Hospital", category="HOSPITAL", distance_m=50.0)],
             status="FOUND",
         ),
     )
@@ -520,9 +512,7 @@ def test_weather_forecast_precip_looks_ahead():
     s_dry, _b, comps_dry, _r, _a = score_priority(
         category="DRAINAGE",
         severity=SeverityInput(severity="LOW"),
-        weather=WeatherInput(
-            condition="Clear", rain_mm=0.0, threshold_mm=5.0, status="AVAILABLE"
-        ),
+        weather=WeatherInput(condition="Clear", rain_mm=0.0, threshold_mm=5.0, status="AVAILABLE"),
     )
     s_forecast, _b, comps_fc, _r, amps_fc = score_priority(
         category="DRAINAGE",
@@ -552,9 +542,7 @@ def test_amplifiers_fire_only_on_real_evidence():
         category="FLOODING",
         severity=SeverityInput(severity="LOW"),
         infrastructure=InfrastructureInput(
-            facilities=[
-                FacilityInput(name="City Hospital", category="HOSPITAL", distance_m=30.0)
-            ],
+            facilities=[FacilityInput(name="City Hospital", category="HOSPITAL", distance_m=30.0)],
             status="FOUND",
         ),
         historical=HistoricalInput(
@@ -626,22 +614,37 @@ def test_sla_status_reporting_states():
         active=True,
     )
     # No rule → NO_POLICY; never blocks scoring and carries no deadline.
-    assert complaint_sla_status(
-        priority="P1_CRITICAL", department=None, category="WATER",
-        submitted_at=open_at, now=now, policy=None,
-    )["state"] == "NO_POLICY"
+    assert (
+        complaint_sla_status(
+            priority="P1_CRITICAL",
+            department=None,
+            category="WATER",
+            submitted_at=open_at,
+            now=now,
+            policy=None,
+        )["state"]
+        == "NO_POLICY"
+    )
     # Well inside the window → ON_TRACK.
     ok = complaint_sla_status(
-        priority="P1_CRITICAL", department=None, category="WATER",
-        submitted_at=now - timedelta(hours=2), now=now, policy=policy,
+        priority="P1_CRITICAL",
+        department=None,
+        category="WATER",
+        submitted_at=now - timedelta(hours=2),
+        now=now,
+        policy=policy,
     )
     assert ok["state"] == "ON_TRACK"
     assert ok["breached"] is False
     assert ok["sla_hours"] == 12
     # Past the 12 h deadline → BREACHED (escalation 3, never a higher score).
     br = complaint_sla_status(
-        priority="P1_CRITICAL", department=None, category="WATER",
-        submitted_at=open_at, now=now, policy=policy,
+        priority="P1_CRITICAL",
+        department=None,
+        category="WATER",
+        submitted_at=open_at,
+        now=now,
+        policy=policy,
     )
     assert br["state"] == "BREACHED"
     assert br["breached"] is True
@@ -722,8 +725,11 @@ def test_calibration_seed_scenario_scores_above_legacy_31():
             radius_m=1000.0,
         ),
         weather=WeatherInput(
-            condition="Moderate rain", rain_mm=6.5, forecast_precip_mm=8.0,
-            threshold_mm=5.0, status="AVAILABLE",
+            condition="Moderate rain",
+            rain_mm=6.5,
+            forecast_precip_mm=8.0,
+            threshold_mm=5.0,
+            status="AVAILABLE",
         ),
         historical=HistoricalInput(
             same_category_nearby_30d=4,
@@ -1012,17 +1018,13 @@ def _calib_facilities() -> list[FacilityInput]:
         ("Park", "OTHER", 800.0),
     ]
     return [
-        FacilityInput(
-            name=name, category=cat, distance_m=d, verification="VERIFIED"
-        )
+        FacilityInput(name=name, category=cat, distance_m=d, verification="VERIFIED")
         for name, cat, d in cells
     ]
 
 
 def _calib_infra() -> InfrastructureInput:
-    return InfrastructureInput(
-        facilities=_calib_facilities(), status="FOUND", radius_m=1000.0
-    )
+    return InfrastructureInput(facilities=_calib_facilities(), status="FOUND", radius_m=1000.0)
 
 
 def _calib_population(sensitive: bool = True) -> PopulationInput:
@@ -1167,34 +1169,48 @@ def test_calibration_emergency_amplifier_requires_access_category():
 
 def test_calibration_flooding_amplifier_needs_rain_or_recurrence():
     dry = WeatherInput(
-        condition="dry", rain_mm=0.0, forecast_precip_mm=0.0,
-        status="AVAILABLE", threshold_mm=5.0,
+        condition="dry",
+        rain_mm=0.0,
+        forecast_precip_mm=0.0,
+        status="AVAILABLE",
+        threshold_mm=5.0,
     )
     rainy = WeatherInput(
-        condition="rain", rain_mm=6.0, forecast_precip_mm=0.0,
-        status="AVAILABLE", threshold_mm=5.0,
+        condition="rain",
+        rain_mm=6.0,
+        forecast_precip_mm=0.0,
+        status="AVAILABLE",
+        threshold_mm=5.0,
     )
     hist_zero = HistoricalInput(
         status="AVAILABLE",
-        same_category_nearby_30d=0, same_category_nearby_7d=0,
-        nearby_30d=0, nearby_7d=0, cluster_250m_30d=0, ward_30d=0,
-        unresolved_similar_nearby=0, duplicates_excluded=0,
+        same_category_nearby_30d=0,
+        same_category_nearby_7d=0,
+        nearby_30d=0,
+        nearby_7d=0,
+        cluster_250m_30d=0,
+        ward_30d=0,
+        unresolved_similar_nearby=0,
+        duplicates_excluded=0,
     )
     hist_recur = HistoricalInput(
         status="AVAILABLE",
-        same_category_nearby_30d=6, same_category_nearby_7d=1,
-        nearby_30d=8, nearby_7d=2, cluster_250m_30d=2, ward_30d=12,
-        unresolved_similar_nearby=2, duplicates_excluded=0,
+        same_category_nearby_30d=6,
+        same_category_nearby_7d=1,
+        nearby_30d=8,
+        nearby_7d=2,
+        cluster_250m_30d=2,
+        ward_30d=12,
+        unresolved_similar_nearby=2,
+        duplicates_excluded=0,
     )
     sev = SeverityInput(severity="MEDIUM", status="AVAILABLE")
 
-    gone = score_priority(
-        category="DRAINAGE", severity=sev, weather=dry, historical=hist_zero
-    )[4]
+    gone = score_priority(category="DRAINAGE", severity=sev, weather=dry, historical=hist_zero)[4]
     assert "FLOODING_RISK" not in {a["key"] for a in gone}
-    rained = score_priority(
-        category="DRAINAGE", severity=sev, weather=rainy, historical=hist_zero
-    )[4]
+    rained = score_priority(category="DRAINAGE", severity=sev, weather=rainy, historical=hist_zero)[
+        4
+    ]
     assert "FLOODING_RISK" in {a["key"] for a in rained}
     recurred = score_priority(
         category="DRAINAGE", severity=sev, weather=dry, historical=hist_recur
@@ -1228,18 +1244,23 @@ def test_calibration_severity_medium_can_escalate_to_high_with_real_context():
     heavy = PopulationInput(
         reports_7d={250: 3, 500: 2, 1000: 5},
         reports_30d={250: 0, 500: 0, 1000: 0},
-        unique_reporters_7d=2, unique_reporters_30d=0,
-        unresolved_reports_7d=0, unresolved_reports_30d=0,
+        unique_reporters_7d=2,
+        unique_reporters_30d=0,
+        unresolved_reports_7d=0,
+        unresolved_reports_30d=0,
         spread_max_distance_m=900.0,
         sensitive_facilities_nearby=1,
-        sensitive_facilities=[
-            FacilityInput(name="Hospital", category="HOSPITAL", distance_m=55.0)
-        ],
-        population=None, population_status="DATA_UNAVAILABLE", status="AVAILABLE",
+        sensitive_facilities=[FacilityInput(name="Hospital", category="HOSPITAL", distance_m=55.0)],
+        population=None,
+        population_status="DATA_UNAVAILABLE",
+        status="AVAILABLE",
     )
     storm = WeatherInput(
-        condition="heavy rain", rain_mm=40.0, forecast_precip_mm=12.0,
-        status="AVAILABLE", threshold_mm=5.0,
+        condition="heavy rain",
+        rain_mm=40.0,
+        forecast_precip_mm=12.0,
+        status="AVAILABLE",
+        threshold_mm=5.0,
     )
     _, _, comps, _, _ = score_priority(
         category="DRAINAGE",
@@ -1251,8 +1272,8 @@ def test_calibration_severity_medium_can_escalate_to_high_with_real_context():
     sev = _comp(comps, "severity")
     assert 18 <= sev["score"] <= 25  # MEDIUM genuinely reaches near-max severity
     subs = sev["details"]["subcomponents"]
-    assert subs["base"]["score"] == 6        # AI base unchanged (6/10)
-    assert subs["safety"]["score"] == 5      # real rain + emergency access
+    assert subs["base"]["score"] == 6  # AI base unchanged (6/10)
+    assert subs["safety"]["score"] == 5  # real rain + emergency access
     assert subs["environmental"]["score"] == 3
     bare = score_priority(
         category="DRAINAGE",
@@ -1272,8 +1293,11 @@ def test_calibration_weather_resaturates_to_40mm_and_is_category_aware():
         ("light rain", 8.0, "STREET_LIGHTING", 1),  # 0.6*0.15 → ~1 (was 10/10)
     ):
         w = WeatherInput(
-            condition=cond, rain_mm=mm, forecast_precip_mm=0.0,
-            status="AVAILABLE", threshold_mm=5.0,
+            condition=cond,
+            rain_mm=mm,
+            forecast_precip_mm=0.0,
+            status="AVAILABLE",
+            threshold_mm=5.0,
         )
         comps = score_priority(category=cat, severity=sev, weather=w)[2]
         got = _comp(comps, "weather")["score"]
@@ -1338,11 +1362,15 @@ def test_calibration_infrastructure_saturates_only_with_real_verified_proximity(
     blocked = InfrastructureInput(
         facilities=[
             FacilityInput(
-                name="Police", category="POLICE_STATION", distance_m=10.0,
+                name="Police",
+                category="POLICE_STATION",
+                distance_m=10.0,
                 verification="VERIFIED",
             ),
             FacilityInput(
-                name="Hospital", category="HOSPITAL", distance_m=85.0,
+                name="Hospital",
+                category="HOSPITAL",
+                distance_m=85.0,
                 verification="VERIFIED",
             ),
         ],
@@ -1367,11 +1395,15 @@ def test_calibration_infrastructure_saturates_only_with_real_verified_proximity(
     far = InfrastructureInput(
         facilities=[
             FacilityInput(
-                name="Hospital", category="HOSPITAL", distance_m=550.0,
+                name="Hospital",
+                category="HOSPITAL",
+                distance_m=550.0,
                 verification="VERIFIED",
             ),
             FacilityInput(
-                name="Park", category="OTHER", distance_m=600.0,
+                name="Park",
+                category="OTHER",
+                distance_m=600.0,
                 verification="VERIFIED",
             ),
         ],
@@ -1409,7 +1441,9 @@ def test_calibration_severity_escalates_toward_high_not_to_max():
         infrastructure=InfrastructureInput(
             facilities=[
                 FacilityInput(
-                    name="Police", category="POLICE_STATION", distance_m=10.0,
+                    name="Police",
+                    category="POLICE_STATION",
+                    distance_m=10.0,
                     verification="VERIFIED",
                 ),
             ],
@@ -1428,9 +1462,12 @@ def test_calibration_scenario_a_through_e():
         (
             "A - verified critical access impacted",
             dict(
-                category="ROAD", severity=SeverityInput(severity="MEDIUM", status="AVAILABLE"),
-                infrastructure=_calib_infra(), weather=_calib_weather(dry=True),
-                historical=_calib_history(recurrence=2), evidence=_calib_evidence(),
+                category="ROAD",
+                severity=SeverityInput(severity="MEDIUM", status="AVAILABLE"),
+                infrastructure=_calib_infra(),
+                weather=_calib_weather(dry=True),
+                historical=_calib_history(recurrence=2),
+                evidence=_calib_evidence(),
             ),
             {"P2_HIGH", "P3_MEDIUM", "P1_CRITICAL"},
         ),
@@ -1442,7 +1479,8 @@ def test_calibration_scenario_a_through_e():
         (
             "C - heavy rain flooding",
             dict(
-                category="FLOODING", severity=SeverityInput(severity="MEDIUM", status="AVAILABLE"),
+                category="FLOODING",
+                severity=SeverityInput(severity="MEDIUM", status="AVAILABLE"),
                 weather=_calib_weather(dry=False),
             ),
             {"P3_MEDIUM", "P4_LOW"},  # rain alone bumps weather, not the whole score
@@ -1458,9 +1496,12 @@ def test_calibration_scenario_a_through_e():
         (
             "E - verified high critical cluster + storm",
             dict(
-                category="FLOODING", severity=SeverityInput(severity="HIGH", status="AVAILABLE"),
-                infrastructure=_calib_infra(), weather=_calib_weather(dry=False),
-                historical=_calib_history(recurrence=4), evidence=_calib_evidence(),
+                category="FLOODING",
+                severity=SeverityInput(severity="HIGH", status="AVAILABLE"),
+                infrastructure=_calib_infra(),
+                weather=_calib_weather(dry=False),
+                historical=_calib_history(recurrence=4),
+                evidence=_calib_evidence(),
             ),
             {"P1_CRITICAL", "P2_HIGH"},
         ),
@@ -1638,12 +1679,8 @@ def test_recalibration_t4_forecast_precip_lifts_drainage_above_default():
             threshold_mm=5.0,
         )
 
-    low = score_priority(
-        category="DRAINAGE", severity=_severity(), weather=weather(30.0)
-    )[2]
-    high = score_priority(
-        category="DRAINAGE", severity=_severity(), weather=weather(90.0)
-    )[2]
+    low = score_priority(category="DRAINAGE", severity=_severity(), weather=weather(30.0))[2]
+    high = score_priority(category="DRAINAGE", severity=_severity(), weather=weather(90.0))[2]
     ld = _comp(low, "weather")
     hd = _comp(high, "weather")
     assert ld["score"] >= 4  # clearly above the old auto-1
@@ -1735,9 +1772,7 @@ def test_recalibration_t7_ai_confidence_98_percent_maps_to_evidence_20():
         corroborating_reports_30d=0,
         status="AVAILABLE",
     )
-    comps = score_priority(
-        category="ROAD", severity=_severity(), evidence=ev
-    )[2]
+    comps = score_priority(category="ROAD", severity=_severity(), evidence=ev)[2]
     c = _comp(comps, "evidence")
     assert c["score"] == 20
     assert c["max_score"] == 20
@@ -1761,8 +1796,11 @@ def _subs(comps: list[dict]) -> dict[str, int]:
 
 def _hospital(distance_m: float, name: str = "General Hospital") -> FacilityInput:
     return FacilityInput(
-        name=name, category="HOSPITAL", distance_m=distance_m,
-        verification="VERIFIED", record_id=f"loc-h-{distance_m}",
+        name=name,
+        category="HOSPITAL",
+        distance_m=distance_m,
+        verification="VERIFIED",
+        record_id=f"loc-h-{distance_m}",
     )
 
 
@@ -1804,8 +1842,13 @@ def test_sev17_3_road_near_hospital_verified_escalates():
         complaint_description="Road is broken near hospital",
     )[2]
     subs = _subs(comps)
-    assert subs == {"base": 6, "safety": 4, "accessibility": 3,
-                    "critical_infrastructure": 4, "environmental": 0}
+    assert subs == {
+        "base": 6,
+        "safety": 4,
+        "accessibility": 3,
+        "critical_infrastructure": 4,
+        "environmental": 0,
+    }
     assert _sev(comps)["score"] == 17
 
 
@@ -1815,11 +1858,18 @@ def test_sev17_4_road_obstruction_near_hospital_police_safety_topped():
     comps = score_priority(
         category="ROAD",
         severity=SeverityInput(severity="MEDIUM", status="AVAILABLE"),
-        infrastructure=_infra([
-            FacilityInput(name="Police", category="POLICE_STATION", distance_m=10.0,
-                          verification="VERIFIED", record_id="loc-p-1"),
-            _hospital(220.0),
-        ]),
+        infrastructure=_infra(
+            [
+                FacilityInput(
+                    name="Police",
+                    category="POLICE_STATION",
+                    distance_m=10.0,
+                    verification="VERIFIED",
+                    record_id="loc-p-1",
+                ),
+                _hospital(220.0),
+            ]
+        ),
         complaint_description="Road obstruction near police station and hospital",
     )[2]
     subs = _subs(comps)
@@ -1837,10 +1887,17 @@ def test_sev17_5_road_blocked_near_fire_station_infra_30_no_double_count():
     comps = score_priority(
         category="ROAD",
         severity=SeverityInput(severity="MEDIUM", status="AVAILABLE"),
-        infrastructure=_infra([
-            FacilityInput(name="Fire Station", category="FIRE_STATION", distance_m=50.0,
-                          verification="VERIFIED", record_id="loc-f-1")
-        ]),
+        infrastructure=_infra(
+            [
+                FacilityInput(
+                    name="Fire Station",
+                    category="FIRE_STATION",
+                    distance_m=50.0,
+                    verification="VERIFIED",
+                    record_id="loc-f-1",
+                )
+            ]
+        ),
         complaint_description="Road fully blocked near the fire station",
     )[2]
     subs = _subs(comps)
@@ -1859,7 +1916,7 @@ def test_sev17_6_drainage_heavy_rain_environmental_full():
     )[2]
     subs = _subs(comps)
     assert subs["environmental"] == 3  # heavy real rain on drainage -> 3/3
-    assert subs["safety"] == 5         # wet hazard escalator to the top
+    assert subs["safety"] == 5  # wet hazard escalator to the top
     assert _sev(comps)["score"] == 14
 
 
@@ -1898,10 +1955,17 @@ def test_sev17_9_streetlight_near_school_stays_low():
     comps = score_priority(
         category="STREET_LIGHTING",
         severity=SeverityInput(severity="LOW", status="AVAILABLE"),
-        infrastructure=_infra([
-            FacilityInput(name="School", category="SCHOOL", distance_m=90.0,
-                          verification="VERIFIED", record_id="loc-s-1")
-        ]),
+        infrastructure=_infra(
+            [
+                FacilityInput(
+                    name="School",
+                    category="SCHOOL",
+                    distance_m=90.0,
+                    verification="VERIFIED",
+                    record_id="loc-s-1",
+                )
+            ]
+        ),
         complaint_description="Streetlight not working near school",
     )[2]
     subs = _subs(comps)
@@ -1956,10 +2020,17 @@ def test_sev17_13_high_strong_context_stays_below_25():
     comps = score_priority(
         category="ROAD",
         severity=SeverityInput(severity="HIGH", status="AVAILABLE"),
-        infrastructure=_infra([
-            FacilityInput(name="Fire Station", category="FIRE_STATION", distance_m=50.0,
-                          verification="VERIFIED", record_id="loc-f-1")
-        ]),
+        infrastructure=_infra(
+            [
+                FacilityInput(
+                    name="Fire Station",
+                    category="FIRE_STATION",
+                    distance_m=50.0,
+                    verification="VERIFIED",
+                    record_id="loc-f-1",
+                )
+            ]
+        ),
         complaint_description="Road blocked near the fire station",
     )[2]
     assert _subs(comps)["base"] == 9
@@ -1972,10 +2043,17 @@ def test_sev17_14_critical_triage_with_context_nears_25():
     comps = score_priority(
         category="ROAD",
         severity=SeverityInput(severity="CRITICAL", status="AVAILABLE"),
-        infrastructure=_infra([
-            FacilityInput(name="Fire Station", category="FIRE_STATION", distance_m=50.0,
-                          verification="VERIFIED", record_id="loc-f-1")
-        ]),
+        infrastructure=_infra(
+            [
+                FacilityInput(
+                    name="Fire Station",
+                    category="FIRE_STATION",
+                    distance_m=50.0,
+                    verification="VERIFIED",
+                    record_id="loc-f-1",
+                )
+            ]
+        ),
         weather=WeatherInput(condition="heavy rain", rain_mm=40.0, status="AVAILABLE"),
         complaint_description="Road fully blocked near the fire station",
     )[2]

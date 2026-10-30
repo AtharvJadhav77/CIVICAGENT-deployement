@@ -435,8 +435,7 @@ async def _resolve_asset_wards(
     if not points:
         return {}
     entries = ", ".join(
-        f"('{key}', ST_SetSRID(ST_MakePoint({lon!r}, {lat!r}), 4326))"
-        for key, lat, lon in points
+        f"('{key}', ST_SetSRID(ST_MakePoint({lon!r}, {lat!r}), 4326))" for key, lat, lon in points
     )
     sql = (
         "SELECT p.k AS k, wb.ward_id AS ward_id FROM "
@@ -466,14 +465,10 @@ async def sync_assets_from_registry(
     rows = (
         (
             await db.execute(
-                select(CriticalLocation)
-                .where(
-                    CriticalLocation.verification_status
-                    == InfrastructureDataStatus.FOUND,
+                select(CriticalLocation).where(
+                    CriticalLocation.verification_status == InfrastructureDataStatus.FOUND,
                     CriticalLocation.is_active.is_(True),
-                    CriticalLocation.category.in_(
-                        list(_REGISTRY_TO_ASSET.keys())
-                    ),
+                    CriticalLocation.category.in_(list(_REGISTRY_TO_ASSET.keys())),
                     CriticalLocation.latitude.is_not(None),
                     CriticalLocation.longitude.is_not(None),
                 )

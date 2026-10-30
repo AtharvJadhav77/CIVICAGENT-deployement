@@ -42,6 +42,10 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
+      - name: Install pgvector in PostgreSQL service
+        run: |
+          docker exec "${{ job.services.postgres.id }}" bash -c \
+            "apt-get update && apt-get install -y --no-install-recommends postgresql-16-pgvector"
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip

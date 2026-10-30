@@ -217,8 +217,7 @@ def _parse_weather_payload(
     forecast_prob_max = max(forecast_prob_values) if forecast_prob_values else None
 
     provided = any(
-        v is not None
-        for v in (temperature, precipitation, rain, wind, code, prob_current)
+        v is not None for v in (temperature, precipitation, rain, wind, code, prob_current)
     )
     return WeatherContext(
         temperature_c=temperature,
