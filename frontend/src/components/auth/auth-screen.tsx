@@ -8,6 +8,7 @@ interface AuthScreenProps {
   title: string;
   subtitle: string;
   children: React.ReactNode;
+  compact?: boolean;
 }
 
 const FEATURES = [
@@ -25,7 +26,7 @@ const FEATURES = [
   },
 ];
 
-export function AuthScreen({ title, subtitle, children }: AuthScreenProps) {
+export function AuthScreen({ title, subtitle, children, compact = false }: AuthScreenProps) {
   return (
     <div className="grid min-h-screen bg-canvas lg:grid-cols-2">
       {/* Brand panel */}
@@ -85,7 +86,7 @@ export function AuthScreen({ title, subtitle, children }: AuthScreenProps) {
 
       {/* Form panel */}
       <main className="flex flex-col px-4 py-10 sm:px-8 lg:items-center lg:justify-center lg:py-0">
-        <div className="w-full max-w-md">
+        <div className={`w-full ${compact ? "max-w-sm" : "max-w-md"}`}>
           {/* Mobile brand */}
           <div className="mb-8 flex items-center gap-2.5 lg:hidden">
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-600 text-white">
@@ -101,8 +102,12 @@ export function AuthScreen({ title, subtitle, children }: AuthScreenProps) {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border-soft bg-surface p-6 shadow-card sm:p-8">
-            <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
+          <div
+            className={`rounded-2xl border border-border-soft bg-surface shadow-card ${
+              compact ? "p-6" : "p-6 sm:p-8"
+            }`}
+          >
+            <h2 className={`${compact ? "text-xl" : "text-2xl"} font-semibold tracking-tight text-slate-900`}>
               {title}
             </h2>
             <p className="mt-1.5 text-sm leading-5 text-slate-500">{subtitle}</p>
